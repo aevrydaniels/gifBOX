@@ -1,0 +1,126 @@
+/* Reset */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(to bottom, #0f172a, #1e293b); /* slate-900 → slate-800 */
+  color: white;
+}
+
+/* Layout */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  box-sizing: border-box; /* Added to fix padding issues */
+  width: 100%; /* Ensure it takes full width */
+}
+
+/* Card */
+.card {
+  background: rgba(15, 23, 42, 0.4); /* slate-950/40 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  display: flex; /* Added to center content inside card */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  text-align: center; /* Center text */
+}
+
+/* Lootbox button */
+.lootbox-btn {
+  position: relative;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 1rem;
+  background: linear-gradient(to bottom right, #14b8a6, #06b6d4); /* teal → cyan */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+  margin: 0 auto; /* Center the button */
+}
+.lootbox-btn:hover {
+  transform: scale(1.02);
+}
+.lootbox-btn:active {
+  transform: scale(0.95);
+}
+.lootbox-btn .lid {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10rem;
+  height: 2rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: transform 0.3s ease;
+}
+.lootbox-btn.opening .lid {
+  transform: translateX(-50%) rotate(-12deg) translateY(-0.5rem);
+}
+.lootbox-btn span {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Result image */
+.result-card {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0 auto; /* Center the result card */
+}
+.result-card img {
+  display: block;
+  max-height: 60vh;
+  width: auto;
+  margin: auto;
+}
+
+/* Sidebar */
+.sidebar {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-left: 1.5rem; /* Add spacing if needed */
+}
+
+/* Recent pulls */
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.history-item img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+/* If you have a main container for both card and sidebar */
+.main-content {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Align to top */
+  width: 100%;
+  max-width: 1200px; /* Optional: limit max width */
+  margin: 0 auto; /* Center the entire content */
+}

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lootbox GIF Puller</title>
+    <style>
+        /* Reset */
+        body, html, #root {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(to bottom, #0f172a, #1e293b);
+            color: white;
+        }
+
+        /* Layout */
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Card */
+        .card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Lootbox button */
+        .lootbox-btn {
+            position: relative;
+            width: 14rem;
+            height: 14rem;
+            border-radius: 1rem;
+            background: linear-gradient(to bottom right, #14b8a6, #06b6d4);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            margin: 1rem 0;
+        }
+        .lootbox-btn:hover {
+            transform: scale(1.02);
+        }
+        .lootbox-btn:active {
+            transform: scale(0.95);
+        }
+        .lootbox-btn .lid {
+            position: absolute;
+            top: 0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10rem;
+            height: 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 0.5rem 0.5rem 0 0;
+            transition: transform 0.3s ease;
+        }
+        .lootbox-btn.opening .lid {
+            transform: translateX(-50%) rotate(-12deg) translateY(-0.5rem);
+        }
+        .lootbox-btn span {
+            position: absolute;
+            bottom: 0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Result image */
+        .result-card {
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 1rem 0;
+            max-width: 100%;
+        }
+        .result-card img {
+            display: block;
+            max-height: 40vh;
+            width: auto;
+            margin: auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 300px;
+        }
+
+        /* Recent pulls */
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.5rem;
+        }
+        .history-item img {
+            width: 2.5rem;
+            height: 2.5rem;
+            object-fit: cover;
+            border-radius: 0.25rem;
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        p {
+            line-height: 1.5;
+        }
+
+        /* Button */
+        button {
+            background: linear-gradient(to right, #14b8a6, #06b6d4);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .common { background: #64748b; width: 70%; }
+        .rare { background: #06b6d4; width: 24%; }
+        .epic { background: #8b5cf6; width: 5%; }
+        .legendary { background: #f59e0b; width: 1%; }
+
+        /* Rarity colors */
+        .common-text { color: #64748b; }
+        .rare-text { color: #06b6d4; }
+        .epic-text { color: #8b5cf6; }
+        .legendary-text { color: #f59e0b; }
+
+        /* Filter tags */
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+
+        .filter-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .filter-tag:hover, .filter-tag.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive design */
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>Lootbox GIF Puller</h1>
+        
+        <div class="main-content">
+            <div class="card">
+                <p>Click the box to reveal a random GIF with rarity tiers and fandom tags.</p>
+                
+                <div class="filter-tags">
+                    <div class="filter-tag">All</div>
+                    <div class="filter-tag">Funny</div>
+                    <div class="filter-tag">Gaming</div>
+                    <div class="filter-tag">Anime</div>
+                    <div class="filter-tag">Movies</div>
+                    <div class="filter-tag">Animals</div>
+                    <div class="filter-tag">Reactions</div>
+                    <div class="filter-tag">Sports</div>
+                    <div class="filter-tag">Music</div>
+                </div>
+                
+                <div class="lootbox-btn" id="lootbox">
+                    <div class="lid"></div>
+                    <span>Open Lootbox</span>
+                </div>
+                
+                <div class="result-card" id="result">
+                    <p style="color: #333; padding: 2rem;">Your GIF will appear here</p>
+                </div>
+                
+                <h3>Odds</h3>
+                <div style="text-align: left; width: 100%;">
+                    <p>Common <span class="common-text">70%</span></p>
+                    <div class="progress-bar"><div class="progress-fill common"></div></div>
+                    
+                    <p>Rare <span class="rare-text">24%</span></p>
+                    <div class="progress-bar"><div class="progress-fill rare"></div></div>
+                    
+                    <p>Epic <span class="epic-text">5%</span></p>
+                    <div class="progress-bar"><div class="progress-fill epic"></div></div>
+                    
+                    <p>Legendary <span class="legendary-text">1%</span></p>
+                    <div class="progress-bar"><div class="progress-fill legendary"></div></div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <h2>Recent Pulls</h2>
+                <p id="pull-count">No pulls yet.</p>
+                <div id="recent-pulls">
+                    <!-- Recent pulls will be added here -->
+                </div>
+                <button id="clear-history" style="margin-top: 1rem; width: 100%;">Clear History</button>
+                
+                <h2>Rarity Leaderboard</h2>
+                <div id="leaderboard">
+                    <p>Common: <span id="common-count">0</span></p>
+                    <p>Rare: <span id="rare-count">0</span></p>
+                    <p>Epic: <span id="epic-count">0</span></p>
+                    <p>Legendary: <span id="legendary-count">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lootbox = document.getElementById('lootbox');
+            const result = document.getElementById('result');
+            const recentPulls = document.getElementById('recent-pulls');
+            const clearHistoryBtn = document.getElementById('clear-history');
+            const pullCount = document.getElementById('pull-count');
+            
+            // Sample GIFs with rarities and tags
+            const gifs = [
+                { url: 'https://media.giphy.com/media/3o7aTskHEUdgCQAXde/giphy.gif', rarity: 'common', tag: 'Funny' },
+                { url: 'https://media.giphy.com/media/l0HlNQ03J5JxX6lva/giphy.gif', rarity: 'common', tag: 'Gaming' },
+                { url: 'https://media.giphy.com/media/26n6WywJyh39n1pBu/giphy.gif', rarity: 'rare', tag: 'Anime' },
+                { url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif', rarity: 'rare', tag: 'Movies' },
+                { url: 'https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif', rarity: 'epic', tag: 'Animals' },
+                { url: 'https://media.giphy.com/media/3o7TKz2eMX36bnyvPa/giphy.gif', rarity: 'epic', tag: 'Reactions' },
+                { url: 'https://media.giphy.com/media/3o7TKsQ8UQ4l4LhGz6/giphy.gif', rarity: 'legendary', tag: 'Sports' },
+                { url: 'https://media.giphy.com/media/3o7TKVitn0x7PqXpny/giphy.gif', rarity: 'legendary', tag: 'Music' }
+            ];
+            
+            // Pull history
+            let pullHistory = [];
+            
+            // Rarity counts
+            const rarityCounts = {
+                common: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
+            
+            // Open lootbox
+            lootbox.addEventListener('click', function() {
+                // Add opening animation
+                lootbox.classList.add('opening');
+                
+                // Remove animation after a delay
+                setTimeout(() => {
+                    lootbox.classList.remove('opening');
+                    
+                    // Get random GIF based on rarity odds
+                    const rand = Math.random();
+                    let selectedGif;
+                    
+                    if (rand < 0.7) {
+                        selectedGif = gifs.filter(g => g.rarity === 'common')[Math.floor(Math.random() * 2)];
+                    } else if (rand < 0.94) {
+                        selectedGif = gifs.filter(g => g.rarity === 'rare')[Math.floor(Math.random() * 2)];
+                    } else if (rand < 0.99) {
+                        selectedGif = gifs.filter(g => g.rarity === 'epic')[Math.floor(Math.random() * 2)];
+                    } else {
+                        selectedGif = gifs.filter(g => g.rarity === 'legendary')[Math.floor(Math.random() * 2)];
+                    }
+                    
+                    // Display result
+                    result.innerHTML = `
+                        <img src="${selectedGif.url}" alt="GIF">
+                        <p style="color: #333; padding: 0.5rem;">
+                            Rarity: <span class="${selectedGif.rarity}-text">${selectedGif.rarity.charAt(0).toUpperCase() + selectedGif.rarity.slice(1)}</span> | 
+                            Tag: ${selectedGif.tag}
+                        </p>
+                    `;
+                    
+                    // Add to history
+                    pullHistory.unshift(selectedGif);
+                    if (pullHistory.length > 50) pullHistory.pop();
+                    
+                    // Update rarity counts
+                    rarityCounts[selectedGif.rarity]++;
+                    
+                    // Update UI
+                    updateHistory();
+                    updateRarityCounts();
+                    
+                }, 300);
+            });
+            
+            // Update history display
+            function updateHistory() {
+                recentPulls.innerHTML = '';
+                pullCount.textContent = `Pulls: ${pullHistory.length}/50`;
+                
+                pullHistory.forEach((pull, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <img src="${pull.url}" alt="GIF">
+                        <div>
+                            <div class="${pull.rarity}-text">${pull.rarity.charAt(0).toUpperCase() + pull.rarity.slice(1)}</div>
+                            <div style="font-size: 0.8rem;">${pull.tag}</div>
+                        </div>
+                    `;
+                    recentPulls.appendChild(item);
+                });
+            }
+            
+            // Update rarity counts
+            function updateRarityCounts() {
+                document.getElementById('common-count').textContent = rarityCounts.common;
+                document.getElementById('rare-count').textContent = rarityCounts.rare;
+                document.getElementById('epic-count').textContent = rarityCounts.epic;
+                document.getElementById('legendary-count').textContent = rarityCounts.legendary;
+            }
+            
+            // Clear history
+            clearHistoryBtn.addEventListener('click', function() {
+                pullHistory = [];
+                for (const rarity in rarityCounts) {
+                    rarityCounts[rarity] = 0;
+                }
+                updateHistory();
+                updateRarityCounts();
+                result.innerHTML = '<p style="color: #333; padding: 2rem;">Your GIF will appear here</p>';
+            });
+            
+            // Filter tags
+            const filterTags = document.querySelectorAll('.filter-tag');
+            filterTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    filterTags.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    // Filter functionality would go here
+                });
+            });
+        });
+    </script>
+</body>
+</html>
